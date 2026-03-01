@@ -10,24 +10,32 @@ export const useReproductionEvents = () => {
   const [farmId, setFarmId] = useState(null);
 
   useEffect(() => {
-    // Attempt to get farmId from localStorage, similar to other MFs
+    // Attempt to get farmId from localStorage
     const authStorage = localStorage.getItem("auth-storage");
+    let foundId = null; // null = no farm selected, do NOT default to 1
     if (authStorage) {
       try {
         const parsed = JSON.parse(authStorage);
-        setFarmId(parsed?.state?.selectedFarm?.id);
+        if (parsed?.state?.selectedFarm?.id) {
+          foundId = parsed.state.selectedFarm.id;
+        }
       } catch (e) {
         console.error("Error parsing auth storage", e);
       }
     }
+    setFarmId(foundId);
   }, []);
 
   const fetchEvents = async () => {
-    if (!farmId) return;
+    if (!farmId) {
+      return;
+    }
 
     setLoading(true);
+    setError(null); // Clear previous errors
     try {
       const data = await reproductionService.getEventsByFarm(farmId);
+
       setEvents(data);
       setItems(data); // Sync items
       setError(null);
@@ -55,7 +63,12 @@ export const useReproductionEvents = () => {
       await fetchEvents();
       return true;
     } catch (err) {
-      setError("Error al crear evento");
+      console.error("Backend error upon creation:", err?.response?.data || err);
+      setError(
+        err?.response?.data?.message ||
+          err?.response?.data?.title ||
+          "Error al crear evento",
+      );
       throw err;
     } finally {
       setLoading(false);

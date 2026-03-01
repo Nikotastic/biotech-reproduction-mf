@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { useReproductionStore } from "@/shared/store/reproductionStore";
 import { Baby, Weight, Ruler, Calendar, Check } from "lucide-react";
 import alertService from "@/shared/utils/alertService";
 import { useForm } from "react-hook-form";
+import { reproductionService } from "@/shared/services/reproductionService";
 
 export default function BirthRegistry() {
   const { births, setBirths } = useReproductionStore();
@@ -17,43 +18,71 @@ export default function BirthRegistry() {
 
   const [showForm, setShowForm] = useState(false);
 
-  // Mock data initialization
-  useState(() => {
-    if (births.length === 0) {
-      setBirths([
-        {
-          id: 1,
-          mother: "Vaca #001",
-          calfId: "BEC-001",
-          birthDate: "2024-12-01",
-          weight: 35,
-          gender: "Macho",
-          notes: "Parto normal",
-        },
-        {
-          id: 2,
-          mother: "Vaca #004",
-          calfId: "BEC-002",
-          birthDate: "2024-12-10",
-          weight: 32,
-          gender: "Hembra",
-          notes: "Asistido",
-        },
-      ]);
-    }
-  });
+  // Load data from service
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const authStorage = localStorage.getItem("auth-storage");
+        let farmId = 1;
+        if (authStorage) {
+          try {
+            const parsed = JSON.parse(authStorage);
+            if (parsed?.state?.selectedFarm?.id) {
+              farmId = parsed.state.selectedFarm.id;
+            }
+          } catch (e) {
+            console.error("Error parsing auth storage", e);
+          }
+        }
 
-  const onSubmit = (data) => {
-    const newBirth = {
-      id: Date.now(),
-      ...data,
+        const data = await reproductionService.getBirthsByFarm(farmId);
+        setBirths(data);
+      } catch (error) {
+        console.error("Error loading births:", error);
+        alertService.error("Error al cargar nacimientos");
+      }
     };
-    setBirths([newBirth, ...births]);
-    alertService.success("Nacimiento registrado exitosamente", "Éxito");
-    reset();
-    setShowForm(false);
-  };
 
+    loadData();
+  }, [setBirths]);
+
+  const onSubmit = async (data) => {
+    try {
+      const authStorage = localStorage.getItem("auth-storage");
+      let farmId = 1;
+      if (authStorage) {
+        try {
+          const parsed = JSON.parse(authStorage);
+          if (parsed?.state?.selectedFarm?.id) {
+            farmId = parsed.state.selectedFarm.id;
+          }
+        } catch (e) {
+          console.error("Error parsing auth storage", e);
+        }
+      }
+
+      const payload = {
+        ...data,
+        farmId,
+        weight: parseFloat(data.weight),
+      };
+
+      const result = await reproductionService.postBirth(payload);
+
+      const newBirth = {
+        id: result?.id || Date.now(),
+        ...payload,
+      };
+
+      setBirths([newBirth, ...births]);
+      alertService.success("Nacimiento registrado exitosamente", "Éxito");
+      reset();
+      setShowForm(false);
+    } catch (error) {
+      console.error("Error creating birth:", error);
+      alertService.error("Error al registrar el nacimiento");
+    }
+  };
   return (
     <div className="space-y-6 p-6">
       <div className="flex justify-between items-center">
