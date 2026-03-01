@@ -46,17 +46,43 @@ export default function BirthRegistry() {
     loadData();
   }, [setBirths]);
 
-  const onSubmit = (data) => {
-    const newBirth = {
-      id: Date.now(),
-      ...data,
-    };
-    setBirths([newBirth, ...births]);
-    alertService.success("Nacimiento registrado exitosamente", "Éxito");
-    reset();
-    setShowForm(false);
-  };
+  const onSubmit = async (data) => {
+    try {
+      const authStorage = localStorage.getItem("auth-storage");
+      let farmId = 1;
+      if (authStorage) {
+        try {
+          const parsed = JSON.parse(authStorage);
+          if (parsed?.state?.selectedFarm?.id) {
+            farmId = parsed.state.selectedFarm.id;
+          }
+        } catch (e) {
+          console.error("Error parsing auth storage", e);
+        }
+      }
 
+      const payload = {
+        ...data,
+        farmId,
+        weight: parseFloat(data.weight),
+      };
+
+      const result = await reproductionService.postBirth(payload);
+
+      const newBirth = {
+        id: result?.id || Date.now(),
+        ...payload,
+      };
+
+      setBirths([newBirth, ...births]);
+      alertService.success("Nacimiento registrado exitosamente", "Éxito");
+      reset();
+      setShowForm(false);
+    } catch (error) {
+      console.error("Error creating birth:", error);
+      alertService.error("Error al registrar el nacimiento");
+    }
+  };
   return (
     <div className="space-y-6 p-6">
       <div className="flex justify-between items-center">
@@ -182,10 +208,11 @@ export default function BirthRegistry() {
           >
             <div className="flex items-center gap-4 w-full md:w-auto">
               <div
-                className={`p-3 rounded-full flex-shrink-0 ${birth.gender === "Hembra"
+                className={`p-3 rounded-full flex-shrink-0 ${
+                  birth.gender === "Hembra"
                     ? "bg-pink-100 text-pink-600"
                     : "bg-blue-100 text-blue-600"
-                  }`}
+                }`}
               >
                 <Baby className="w-6 h-6" />
               </div>
