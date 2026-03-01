@@ -34,6 +34,15 @@ export function ReproductionMonitor() {
     );
   });
 
+  if (isModalOpen) {
+    return (
+      <ReproductionEventForm
+        onSubmit={handleCreate}
+        onCancel={() => setIsModalOpen(false)}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -128,19 +137,19 @@ export function ReproductionMonitor() {
                       "¿Estás seguro de cancelar este evento?",
                       "Confirmar Acción",
                       "Sí, cancelar",
-                      "No"
+                      "No",
                     );
                     if (result.isConfirmed) {
                       try {
                         await cancelEvent(event.id);
                         alertService.success(
                           "Evento cancelado correctamente",
-                          "Cancelado"
+                          "Cancelado",
                         );
                       } catch (e) {
                         alertService.error(
                           "Error al cancelar el evento",
-                          "Error"
+                          "Error",
                         );
                       }
                     }
@@ -153,25 +162,6 @@ export function ReproductionMonitor() {
               </div>
             </motion.div>
           ))}
-        </div>
-      )}
-
-      {/* Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-3xl shadow-2xl p-6 w-full max-w-lg"
-          >
-            <h2 className="text-2xl font-bold text-pink-900 mb-6">
-              Registrar Evento Reproductivo
-            </h2>
-            <ReproductionEventForm
-              onSubmit={handleCreate}
-              onCancel={() => setIsModalOpen(false)}
-            />
-          </motion.div>
         </div>
       )}
     </div>
