@@ -1,17 +1,19 @@
 import axios from "axios";
 
-// Cliente de API configurado para el Gateway
+// Get API URL from environment or use mock mode
+const USE_MOCK_API = false;
+const API_URL = "/api";
+
+// API client configured for the Gateway
 const apiClient = axios.create({
-  baseURL:
-    import.meta.env.VITE_API_GATEWAY_URL ||
-    "https://api-gateway-bio-tech.up.railway.app/api",
+  baseURL: API_URL,
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-// Interceptor para agregar token JWT en cada petición
+// Interceptor to add JWT token in each request
 apiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("auth-storage");
@@ -32,14 +34,12 @@ apiClient.interceptors.request.use(
   }
 );
 
-// Interceptor para manejar errores de autenticación
+// Interceptor to handle authentication errors
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Token inválido o expirado
       localStorage.removeItem("auth-storage");
-      window.dispatchEvent(new Event("auth-change"));
       window.location.href = "/login";
     }
     return Promise.reject(error);

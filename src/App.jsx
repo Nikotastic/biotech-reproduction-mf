@@ -3,7 +3,7 @@ import { Layout } from "@/layout/components/Layout";
 import { ReproductionMonitor } from "./features/reproduction-monitor/components/ReproductionMonitor";
 import PregnancyTracking from "./features/pregnancy-tracking/components/PregnancyTracking";
 import BirthRegistry from "./features/birth-registry/components/BirthRegistry";
-import { ToastContainer } from "./shared/components/ui/ToastContainer";
+
 import { Activity, Baby, Heart, ClipboardList } from "lucide-react";
 import "./App.css";
 
@@ -13,7 +13,7 @@ function App() {
   return (
     <Layout>
       <div className="min-h-screen bg-gray-50/50 p-6 md:p-8 font-sans text-gray-900">
-        <div className="max-w-7xl mx-auto space-y-8">
+        <div className="w-full max-w-none mx-auto space-y-8">
           {/* Navigation Tabs */}
           <div className="flex justify-center sticky top-4 z-30">
             <div className="bg-white/90 backdrop-blur-md p-1.5 rounded-2xl shadow-lg border border-gray-100 inline-flex gap-2">
@@ -74,8 +74,6 @@ function App() {
             {activeTab === "pregnancy" && <PregnancyTracking />}
             {activeTab === "births" && <BirthRegistry />}
           </div>
-
-          <ToastContainer />
         </div>
       </div>
     </Layout>
